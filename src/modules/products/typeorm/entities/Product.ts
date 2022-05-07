@@ -4,20 +4,20 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from "typeorm";
+} from 'typeorm';
 
-@Entity("products")
+@Entity('products')
 class Product {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
   name: string;
 
-  @Column("decimal")
+  @Column('decimal')
   price: number;
 
-  @Column("int")
+  @Column('int')
   quantity: number;
 
   @CreateDateColumn()
