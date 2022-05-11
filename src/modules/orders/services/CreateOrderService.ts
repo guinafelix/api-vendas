@@ -18,10 +18,10 @@ interface IRequest {
 class CreateOrderService {
   public async execute({ customer_id, products }: IRequest): Promise<Order> {
     const ordersRepository = getCustomRepository(OrdersRepository);
-    const customerRepository = getCustomRepository(CustomersRepository);
+    const customersRepository = getCustomRepository(CustomersRepository);
     const productsRepository = getCustomRepository(ProductRepository);
 
-    const customerExists = await customerRepository.findByName(customer_id);
+    const customerExists = await customersRepository.findById(customer_id);
 
     if (!customerExists) {
       throw new AppError('Could not find any customer with the given id.');
@@ -29,7 +29,7 @@ class CreateOrderService {
 
     const existsProducts = await productsRepository.findAllByIds(products);
 
-    if (!existsProducts) {
+    if (!existsProducts.length) {
       throw new AppError('Could not find any products with the given ids.');
     }
 
@@ -41,7 +41,7 @@ class CreateOrderService {
 
     if (checkInexistentProducts.length) {
       throw new AppError(
-        `Could not find product ${checkInexistentProducts[0].id}. with the given ids.`,
+        `Could not find product ${checkInexistentProducts[0].id}.`,
       );
     }
 
@@ -53,11 +53,12 @@ class CreateOrderService {
 
     if (quantityAvailable.length) {
       throw new AppError(
-        `The quantity ${quantityAvailable[0].quantity} is not available for ${quantityAvailable[0].id}.`,
+        `The quantity ${quantityAvailable[0].quantity}
+         is not available for ${quantityAvailable[0].id}.`,
       );
     }
 
-    const serialiazedProducts = products.map(product => ({
+    const serializedProducts = products.map(product => ({
       product_id: product.id,
       quantity: product.quantity,
       price: existsProducts.filter(p => p.id === product.id)[0].price,
@@ -65,15 +66,15 @@ class CreateOrderService {
 
     const order = await ordersRepository.createOrder({
       customer: customerExists,
-      products: serialiazedProducts,
+      products: serializedProducts,
     });
 
     const { order_products } = order;
 
     const updatedProductQuantity = order_products.map(product => ({
-      id: product.id,
+      id: product.product_id,
       quantity:
-        existsProducts.filter(p => p.id === product.id)[0].quantity -
+        existsProducts.filter(p => p.id === product.product_id)[0].quantity -
         product.quantity,
     }));
 
